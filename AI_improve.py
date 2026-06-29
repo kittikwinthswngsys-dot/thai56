@@ -1490,17 +1490,6 @@ def api():
 
     moneyperday = (money - (day * transport_cost.get(car, 0))) / day
 
-    def dist(p):
-        d = geodesic(province_coordinates[city], province_coordinates[p]).kilometers
-        if d > way:
-            return 0
-        return max(0, 100 - d)
-
-    def budget(p):
-        if p not in budget_per_day:
-            return 0
-        return 100 if budget_per_day[p] <= moneyperday else 0
-
     def style_s(p):
         s = 0
         for i in style:
@@ -1536,11 +1525,10 @@ def api():
             continue
 
         score = (
-            budget(p)*0.25 +
-            style_s(p)*0.35 +
-            who_s(p)*0.15 +
+            style_s(p)*0.45 +
+            who_s(p)*0.25 +
             limit_s(p)*0.20 +
-            season_s(p)*0.05
+            season_s(p)*0.10
         )
 
         desc = shot_thai_provinces.get(p, "")
@@ -1550,14 +1538,14 @@ def api():
 
         reasons = []
         if style and p in styl.get(style[0], []):
-            reasons.append("ตรงสไตล์ที่คุณต้องการ")
+            reasons.append("ตรงสไตล์ที่คุณต้องการ"+str(style[0]))
         if who_list and p in who.get(who_list[0], []):
-            reasons.append("เหมาะกับคนที่ไปด้วย")
+            reasons.append("เหมาะกับการไปดกับ"+str(who_list[0]) if who_list[0] != "คนเดียว" else "เหมาะกับการไปคนเดียว")
         if p in season_provinces.get(month, []):
             reasons.append("เหมาะกับฤดูกาลที่คุณไป")
         for i in limit:
             if p in opasak.get(i, []):
-                reasons.append("เหมาะกับข้อจำกัดของคุณ")
+                reasons.append("เหมาะกับข้อจำกัดของคุณ" + str(i))
 
         scores.append({
             "province": p,
@@ -1570,7 +1558,6 @@ def api():
     scores.sort(key=lambda x: x["score"], reverse=True)
 
     return jsonify(scores[:10])
-
 
 if __name__ == "__main__":
     app.run(debug=True)
